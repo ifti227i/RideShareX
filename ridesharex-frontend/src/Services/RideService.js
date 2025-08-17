@@ -1,9 +1,11 @@
-const RIDES_ENDPOINT = 'http://localhost:8080/rides';
+import UserService from './UserService';
+
+const RIDES_ENDPOINT = 'http://localhost:8081/rides';
 
 class RideService {
   async getAvailableRides() {
     try {
-      const response = await fetch(RIDES_ENDPOINT);
+      const response = await UserService.fetchWithAuth(RIDES_ENDPOINT);
       const data = await response.json();
       return data;
     } catch (error) {

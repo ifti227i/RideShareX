@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RideShareX Debug Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .error-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff8f8;
+            border: 1px solid #ffdddd;
+            border-radius: 4px;
+        }
+        .error {
+            color: #d32f2f;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #ffebee;
+            border-left: 4px solid #d32f2f;
+            word-wrap: break-word;
+        }
+        .success {
+            color: #388e3c;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #e8f5e9;
+            border-left: 4px solid #388e3c;
+        }
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RideShareX Debug Page</h1>
+        <p>This page helps identify JavaScript errors in your application.</p>
+
+        <div>
+            <h2>Environment Information</h2>
+            <ul id="env-info">
+                <li>Browser: <span id="browser-info"></span></li>
+                <li>React Version: <script>document.write(React?.version || 'Not loaded')</script></li>
+                <li>Public URL: <script>document.write(window.location.origin)</script></li>
+            </ul>
+        </div>
+
+        <div>
+            <h2>Test React Loading</h2>
+            <div id="react-test"></div>
+            <button onclick="testReact()">Test React</button>
+        </div>
+
+        <div>
+            <h2>Resource Loading Check</h2>
+            <div id="resource-check"></div>
+            <button onclick="checkResources()">Check Resources</button>
+        </div>
+
+        <div>
+            <h2>Console Errors</h2>
+            <div id="error-log" class="error-container">
+                <p>Click the button below to check for console errors:</p>
+                <button onclick="checkErrors()">Check for Errors</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fill browser info
+        document.getElementById('browser-info').textContent = navigator.userAgent;
+
+        // Override console.error to capture errors
+        (function() {
+            const originalConsoleError = console.error;
+            window.consoleErrors = [];
+
+            console.error = function() {
+                window.consoleErrors.push(Array.from(arguments).join(' '));
+                originalConsoleError.apply(console, arguments);
+            };
+        })();
+
+        // Check for errors that have occurred
+        function checkErrors() {
+            const errorLog = document.getElementById('error-log');
+
+            if (window.consoleErrors && window.consoleErrors.length > 0) {
+                window.consoleErrors.forEach(error => {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error';
+                    errorDiv.textContent = error;
+                    errorLog.appendChild(errorDiv);
+                });
+            } else {
+                const successDiv = document.createElement('div');
+                successDiv.className = 'success';
+                successDiv.textContent = 'No console errors detected!';
+                errorLog.appendChild(successDiv);
+            }
+        }
+
+        // Test if React is loading properly
+        function testReact() {
+            const reactTest = document.getElementById('react-test');
+            reactTest.innerHTML = '';
+
+            try {
+                // Try to load React
+                const script = document.createElement('script');
+                script.src = '/static/js/main.js'; // Adjust based on your build output
+                script.onload = function() {
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'success';
+                    successDiv.textContent = 'React script loaded successfully!';
+                    reactTest.appendChild(successDiv);
+                };
+                script.onerror = function() {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error';
+                    errorDiv.textContent = 'Failed to load React script. Check network tab for details.';
+                    reactTest.appendChild(errorDiv);
+                };
+                document.body.appendChild(script);
+            } catch (e) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.textContent = 'Error testing React: ' + e.message;
+                reactTest.appendChild(errorDiv);
+            }
+        }
+
+        // Check if key resources are loading
+        function checkResources() {
+            const resourceCheck = document.getElementById('resource-check');
+            resourceCheck.innerHTML = '';
+
+            // List of important resources to check
+            const resources = [
+                '/static/js/main.js',
+                '/static/css/main.css',
+                '/manifest.json',
+                '/favicon.ico'
+            ];
+
+            resources.forEach(resource => {
+                const resourceDiv = document.createElement('div');
+
+                fetch(resource)
+                    .then(response => {
+                        if (response.ok) {
+                            resourceDiv.className = 'success';
+                            resourceDiv.textContent = `✓ ${resource} loaded successfully`;
+                        } else {
+                            resourceDiv.className = 'error';
+                            resourceDiv.textContent = `✗ ${resource} returned status ${response.status}`;
+                        }
+                    })
+                    .catch(error => {
+                        resourceDiv.className = 'error';
+                        resourceDiv.textContent = `✗ Failed to load ${resource}: ${error.message}`;
+                    });
+
+                resourceCheck.appendChild(resourceDiv);
+            });
+        }
+
+        // Capture any errors on page load
+        window.addEventListener('error', function(event) {
+            window.consoleErrors.push(`Runtime error: ${event.message} at ${event.filename}:${event.lineno}`);
+        });
+    </script>
+</body>
+</html>
+

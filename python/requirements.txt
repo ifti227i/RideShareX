@@ -1,7 +1,0 @@
-flask
-SQLAlchemy
-mysqlclient
-mysql-connector-python
-python-dotenv
-redis
-flasgger
